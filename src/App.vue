@@ -20,11 +20,10 @@
           width="70"
           textAlign="Right"
         ></e-column>
-        <e-column field="LHS" headerText="LHS" width="100"></e-column>
+        <e-column field="lhs" headerText="LHS" width="100"></e-column>
         <e-column
           field="description"
           headerText="Description"
-          :edit="priorityParams"
           width="200"
         ></e-column>
         <e-column
@@ -69,7 +68,6 @@
 </template>
 <script>
 import { Page, Toolbar, Edit, RowDD } from "@syncfusion/ej2-vue-treegrid";
-import { DropDownList } from "@syncfusion/ej2-dropdowns";
 // import { Query } from "@syncfusion/ej2-data";
 import { mapGetters, mapActions } from "vuex";
 
@@ -77,16 +75,6 @@ import { mapGetters, mapActions } from "vuex";
 //   { priorityName: "Normal", priorityId: "1" },
 //   { priorityName: "High", priorityId: "2" },
 // ];
-
-let durationData = [
-  { durationValue: 2, priorityId: "1", durationId: 2 },
-  { durationValue: 3, priorityId: "1", durationId: 3 },
-  { durationValue: 4, priorityId: "1", durationId: 4 },
-  { durationValue: 11, priorityId: "2", durationId: 11 },
-  { durationValue: 15, priorityId: "2", durationId: 15 },
-  { durationValue: 20, priorityId: "2", durationId: 20 },
-];
-let priorityElem, durationElem, priorityObj, durationObj;
 
 export default {
   data() {
@@ -100,67 +88,26 @@ export default {
         mode: "Row",
       },
       toolbar: ["Add", "Edit", "Delete", "Update", "Cancel"],
-      priorityParams: {
-        create: () => {
-          priorityElem = document.createElement("input");
-          return priorityElem;
-        },
-        read: () => {
-          console.log("read", priorityObj);
+      // priorityParams: {
+      //   create: () => {
+      //     priorityElem = document.createElement("input");
+      //     return priorityElem;
+      //   },
+      //   read: () => {
+      //     console.log("read", priorityObj);
 
-          return priorityObj.text;
-        },
-        destroy: () => {
-          console.log("destroy", this.data);
+      //     return priorityObj.text;
+      //   },
+      //   destroy: () => {
+      //     console.log("destroy", this.data);
 
-          priorityObj.destroy();
-        },
-        write: () => {
-          console.log("priorityObj", priorityObj);
+      //     priorityObj.destroy();
+      //   },
+      //   write: () => {
+      //     console.log("priorityObj", priorityObj);
 
-          // priorityObj = new DropDownList({
-          //   dataSource: priorityData,
-          //   fields: { value: "priorityId", text: "priorityName" },
-          //   floatLabelType: "Never",
-          //   placeholder: "Select a Priority",
-          //   change: () => {
-          //     console.log("durationObj", durationObj);
-          //     durationObj.enabled = true;
-          //     let tempQuery = new Query().where(
-          //       "priorityId",
-          //       "equal",
-          //       priorityObj.value
-          //     );
-          //     durationObj.query = tempQuery;
-          //     durationObj.text = null;
-          //     durationObj.dataBind();
-          //   },
-          // });
-          // priorityObj.appendTo(priorityElem);
-        },
-      },
-      durationParams: {
-        create: () => {
-          durationElem = document.createElement("input");
-          return durationElem;
-        },
-        destroy: () => {
-          durationObj.destroy();
-        },
-        read: () => {
-          return durationObj.text;
-        },
-        write: () => {
-          durationObj = new DropDownList({
-            dataSource: durationData,
-            enabled: false,
-            fields: { value: "durationId", text: "durationValue" },
-            floatLabelType: "Never",
-            placeholder: "Select a duration",
-          });
-          durationObj.appendTo(durationElem);
-        },
-      },
+      //   },
+      // },
     };
   },
   provide: {
@@ -184,7 +131,9 @@ export default {
     },
   },
   created() {
+    // setInterval(() => {
     this.fetchData();
+    // }, 1000);
   },
 };
 </script>
