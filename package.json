@@ -11,11 +11,13 @@
     "@syncfusion/ej2-data": "^18.4.46",
     "@syncfusion/ej2-dropdowns": "^18.4.48",
     "@syncfusion/ej2-vue-treegrid": "^18.4.48",
+    "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "node-sass": "^5.0.0",
     "requirejs": "^2.3.6",
     "sass-loader": "^10.1.1",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

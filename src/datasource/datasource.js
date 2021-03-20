@@ -1,5 +1,5 @@
 
-    exports.projectData = [
+let projectData = [
         { 'TaskID': 1, 'LHS': 'Product Info', 'StartDate': new Date('02/23/2017'), 'qty': '', 'total' : '',
         'unit':'', 'pricePer': '' , 'source':"" },
         { 'TaskID': 2, 'LHS': 'Vendor Name', 'description': '"Nature Made" Fish Oil 1200 mg., 400 Softgels', 'qty': '', 'total' : '',
@@ -37,4 +37,5 @@
         { 'TaskID': 12, 'LHS': 'Amazon (by 3rd Party)', 'description': '$13.49', 'qty': '', 'total' : '13.49',
         'unit':"USD", 'pricePer': 'price', 'parentID': 10 , 'source':"URL"  },
     ]; 
-	
+
+export {projectData}
