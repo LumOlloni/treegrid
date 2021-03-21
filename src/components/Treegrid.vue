@@ -6,8 +6,8 @@
       :dataSource="gridData"
       :treeColumnIndex="0"
       :hasChildMapping="true"
-      :event="drag"
       parentIdMapping="parentID"
+      :rowDrop="rowDrop"
       :allowRowDragAndDrop="true"
       idMapping="id"
       :allowSorting="true"
@@ -121,9 +121,25 @@ export default {
   },
 
   methods: {
-    drag(e) {
-      console.log("eee", e);
+    rowDrop(event) {
+      const { data, fromIndex, dropIndex } = event;
+      if (fromIndex !== dropIndex) {
+        let findDropIndex = this.gridData.result[dropIndex].id;
+        let findDropParent = this.gridData.result[dropIndex].id;
+        if (data[0].id === findDropParent) {
+          return;
+        }
+
+    
+          data[0].parentID = findDropIndex;
+          this.loading = true;
+          axios.post("http://localhost:8090/products/save", data[0]);
+          this.dataStateChange();
+          this.loading = false;
+        
+      }
     },
+
     sendData(state) {
       const { ...alldata } = state.data;
       let objData = {};
