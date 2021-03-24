@@ -1,15 +1,18 @@
 <template>
   <div>
     <h4 v-if="loading">Loading...</h4>
+
     <ejs-treegrid
       v-else
       :dataSource="gridData"
       :treeColumnIndex="0"
       :hasChildMapping="true"
       parentIdMapping="parentID"
+      :queryCellInfo="queryCellInfo"
       :rowDrop="rowDrop"
       :allowRowDragAndDrop="true"
       idMapping="id"
+      :actionComplete="actionComplete"
       :allowSorting="true"
       :dataStateChange="dataStateChange"
       :dataSourceChanged="dataSourceChanged"
@@ -109,6 +112,7 @@ export default {
       orderID: 0,
       shipCountry: "",
       customerID: "",
+      timeOut: false,
       gridData: {},
       allOrders: [],
       loading: true,
@@ -121,6 +125,20 @@ export default {
   },
 
   methods: {
+    actionComplete(e) {
+      console.log("ee", e);
+      // this.dataStateChange();
+    },
+    queryCellInfo(args) {
+      let data = args.data;
+      if (args.column.field === "total" && data.id === 63) {
+        let i = document.createElement("i");
+        i.classList.add("fa", "fa-lock");
+        args.cell.style.pointerEvents = "none";
+        args.cell.style.background = "rgba(236, 240, 241, 0.5)";
+        args.cell.appendChild(i);
+      }
+    },
     rowDrop(event) {
       const { data, fromIndex, dropIndex } = event;
       if (fromIndex !== dropIndex) {
@@ -129,14 +147,11 @@ export default {
         if (data[0].id === findDropParent) {
           return;
         }
-
-    
-          data[0].parentID = findDropIndex;
-          this.loading = true;
-          axios.post("http://localhost:8090/products/save", data[0]);
-          this.dataStateChange();
-          this.loading = false;
-        
+        data[0].parentID = findDropIndex;
+        this.loading = true;
+        axios.post("http://localhost:8090/products/save", data[0]);
+        this.dataStateChange();
+        this.loading = false;
       }
     },
 
@@ -206,3 +221,10 @@ export default {
   },
 };
 </script>
+<style scoped>
+.row-disabled {
+  background-color: rgba(236, 240, 241, 0.5) !important;
+  pointer-events: none !important;
+  width: 100% !important;
+}
+</style>
