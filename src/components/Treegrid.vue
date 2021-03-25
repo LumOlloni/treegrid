@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h4 v-if="loading">Loading...</h4>
-
+    <h1 v-if="loading">Loading</h1>
     <ejs-treegrid
       v-else
-      :dataSource="gridData"
-      :treeColumnIndex="0"
+      :dataSource="allDataSource"
+      :treeColumnIndex="1"
+      ref="treegrid"
       :hasChildMapping="true"
       parentIdMapping="parentID"
       :queryCellInfo="queryCellInfo"
@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import axios from "axios";
+// import axios from "axios";
 
 import {
   Page,
@@ -85,6 +85,9 @@ import {
   RowDD,
   Selection,
 } from "@syncfusion/ej2-vue-treegrid";
+// import axios from "axios";
+import SockJS from "sockjs-client";
+import Stomp from "stomp-websocket";
 
 export default {
   name: "Treegrid",
@@ -112,22 +115,94 @@ export default {
       orderID: 0,
       shipCountry: "",
       customerID: "",
+      stompClient: null,
+      socket: null,
       timeOut: false,
-      gridData: {},
+      gridData: {
+        result: [],
+        loading: true,
+        count: 0,
+      },
       allOrders: [],
       loading: true,
     };
   },
-  mounted() {
-    // setInterval(() => {
-    this.dataStateChange();
-    // }, 1000);
-  },
 
+
+  mounted() {
+    this.dataStateChange();
+    setTimeout(() => {
+      let spinner = document.querySelector(".e-spinner-pane");
+      if (spinner !== null || spinner !== undefined) {
+        document.querySelector(".e-spinner-pane").remove();
+        this.$refs.treegrid.hideSpinner();
+      }
+    }, 1000);
+  },
+  created() {
+    this.loading = true;
+    this.socket = new SockJS("http://localhost:8090/productInfo-websocket");
+    this.stompClient = Stomp.over(this.socket);
+    this.stompClient.connect({}, (frame) => {
+      const { command } = frame;
+      if (command === "CONNECTED") {
+        this.stompClient.send("/data/all", {});
+        this.stompClient.subscribe("/table/save", (data) => {
+          console.log("run data");
+          let socketData = JSON.parse(data.body);
+          let findIndex = this.gridData.result.findIndex(
+            (res) => res.id === socketData.id
+          );
+          if (findIndex === -1) {
+            this.gridData.result.push(socketData);
+            this.gridData.count++;
+            this.gridData = { ...this.gridData };
+          } else {
+            this.gridData.result[findIndex] = socketData;
+            this.gridData = { ...this.gridData };
+          }
+        });
+        this.stompClient.subscribe("/table/delete", (data) => {
+          const { id } = JSON.parse(data.body);
+          let index = this.gridData.result.findIndex((e) => e.id === id);
+
+          if (index > -1) {
+            this.gridData.result.splice(index, 1);
+            this.gridData.count--;
+          }
+
+          this.gridData = { ...this.gridData };
+          this.gridData.loading = false;
+        });
+
+        this.stompClient.subscribe("/table/all", (data) => {
+          let socketData = JSON.parse(data.body);
+          this.gridData.result = socketData;
+          console.log(" this.gridData.result", this.gridData.result);
+          this.gridData.count = socketData.length;
+          this.gridData.loading = false;
+          console.log(" this.gridData.count", this.gridData.count);
+          this.loading = false;
+        });
+      }
+    });
+    // setTimeout(() => this.$refs.treegrid.showSpinner(), 0);
+  },
+  computed: {
+    allDataSource() {
+      return this.gridData;
+    },
+  },
   methods: {
-    actionComplete(e) {
-      console.log("ee", e);
-      // this.dataStateChange();
+  
+    actionBegin(args) {
+      // this.stompClient.send("/data/all", {});
+      console.log("args", args.rowData);
+      console.log("fsafasfsa");
+    },
+    actionComplete(args) {
+      // this.stompClient.send("/data/all", {});
+      console.log("state", args);
     },
     queryCellInfo(args) {
       let data = args.data;
@@ -148,10 +223,9 @@ export default {
           return;
         }
         data[0].parentID = findDropIndex;
-        this.loading = true;
-        axios.post("http://localhost:8090/products/save", data[0]);
-        this.dataStateChange();
-        this.loading = false;
+
+        this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
+        // this.dataStateChange();
       }
     },
 
@@ -168,51 +242,25 @@ export default {
       return objData;
     },
     dataStateChange: function() {
-      axios.get("http://localhost:8090/products/all").then((res) => {
-        this.gridData = {
-          result: res.data,
-          count: res.data.length,
-        };
-        this.loading = false;
-      });
+      // this.stompClient.send("/data/all");
     },
 
     dataSourceChanged: function(state) {
       if (state.action === "add") {
         let dataToSend = this.sendData(state);
-        this.loading = true;
-        axios
-          .post("http://localhost:8090/products/save", dataToSend)
-          .then(() => {
-            this.loading = false;
-            state.endEdit();
-          });
+        this.stompClient.send("/data/save", {}, JSON.stringify(dataToSend));
+        state.endEdit();
       } else if (state.action === "edit") {
         let dataToSend = this.sendData(state);
-        this.loading = true;
-        axios
-          .post("http://localhost:8090/products/save", dataToSend)
-          .then(() => {
-            state.endEdit();
-            this.loading = false;
-          });
+        this.stompClient.send("/data/save", {}, JSON.stringify(dataToSend));
+        state.endEdit();
       } else if (state.requestType === "delete") {
         const { id } = state.data[0];
-        this.loading = true;
-        axios
-          .post(
-            "http://localhost:8090/products/delete",
-            {},
-            {
-              params: {
-                TaskID: id,
-              },
-            }
-          )
-          .then(() => {
-            this.loading = false;
-            state.endEdit();
-          });
+        let objToSend = {
+          id: id,
+        };
+        this.stompClient.send("/data/delete", {}, JSON.stringify(objToSend));
+        state.endEdit();
       }
     },
   },
@@ -226,5 +274,8 @@ export default {
   background-color: rgba(236, 240, 241, 0.5) !important;
   pointer-events: none !important;
   width: 100% !important;
+}
+.e-spin-show {
+  display: none;
 }
 </style>
