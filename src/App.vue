@@ -1,17 +1,9 @@
 <template>
   <div id="app">
-    <Treegrid  />
+    <!-- <Treegrid  /> -->
+    <router-view />
   </div>
 </template>
 <script>
-import Treegrid from "../src/components/Treegrid";
-
-// import TestGrid from "../src/components/TestGrid";
-export default {
-  components: {
-    Treegrid,
-  },
-
-
-};
+export default {};
 </script>
