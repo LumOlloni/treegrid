@@ -13,7 +13,6 @@
       :allowRowDragAndDrop="true"
       idMapping="id"
       :actionComplete="actionComplete"
-      :allowSorting="true"
       :dataStateChange="dataStateChange"
       :dataSourceChanged="dataSourceChanged"
       :editSettings="editSettings"
@@ -37,6 +36,7 @@
           field="qty"
           headerText="QTY"
           width="90"
+          :edit="editTemplate"
           textAlign="center"
         ></e-column>
         <e-column
@@ -88,11 +88,36 @@ import {
 // import axios from "axios";
 import SockJS from "sockjs-client";
 import Stomp from "stomp-websocket";
+import Vue from "vue";
+
+// import { Query } from "@syncfusion/ej2-data";
 
 export default {
   name: "Treegrid",
   data() {
     return {
+      editTemplate: () => {
+        return {
+          template: Vue.component("inputTemp", {
+            template: `<div class="e-input-group e-control-wrapper"> 
+            <input class="e-field e-input e-defaultcell"  type="text" /> 
+            <span class="e-input-group-icon e-icons e-search" v-on:click="searchClick"></span> 
+                   </div>`,
+            data: function() {
+              return {
+                data: {},
+              };
+            },
+            methods: {
+              searchClick: (args) => {
+                console.log("args", args);
+                // Icon span tag click event
+                // Here you can perform your required actions
+              },
+            },
+          }),
+        };
+      },
       columns: [
         "description",
         "id",
@@ -128,15 +153,10 @@ export default {
     };
   },
 
-
   mounted() {
     this.dataStateChange();
     setTimeout(() => {
-      let spinner = document.querySelector(".e-spinner-pane");
-      if (spinner !== null || spinner !== undefined) {
-        document.querySelector(".e-spinner-pane").remove();
-        this.$refs.treegrid.hideSpinner();
-      }
+      this.hideSpinnerMethod();
     }, 1000);
   },
   created() {
@@ -148,7 +168,6 @@ export default {
       if (command === "CONNECTED") {
         this.stompClient.send("/data/all", {});
         this.stompClient.subscribe("/table/save", (data) => {
-          console.log("run data");
           let socketData = JSON.parse(data.body);
           let findIndex = this.gridData.result.findIndex(
             (res) => res.id === socketData.id
@@ -194,19 +213,23 @@ export default {
     },
   },
   methods: {
-  
+    hideSpinnerMethod() {
+      let spinner = document.querySelector(".e-spinner-pane");
+      if (spinner !== null) {
+        document.querySelector(".e-spinner-pane").remove();
+        this.$refs.treegrid.hideSpinner();
+      }
+    },
     actionBegin(args) {
-      // this.stompClient.send("/data/all", {});
       console.log("args", args.rowData);
       console.log("fsafasfsa");
     },
     actionComplete(args) {
-      // this.stompClient.send("/data/all", {});
       console.log("state", args);
     },
     queryCellInfo(args) {
       let data = args.data;
-      if (args.column.field === "total" && data.id === 63) {
+      if (args.column.field === "total" && data.id === 1) {
         let i = document.createElement("i");
         i.classList.add("fa", "fa-lock");
         args.cell.style.pointerEvents = "none";
@@ -216,16 +239,23 @@ export default {
     },
     rowDrop(event) {
       const { data, fromIndex, dropIndex } = event;
+      console.log("event", event);
       if (fromIndex !== dropIndex) {
         let findDropIndex = this.gridData.result[dropIndex].id;
-        let findDropParent = this.gridData.result[dropIndex].id;
-        if (data[0].id === findDropParent) {
+        let dropParent = this.gridData.result[dropIndex].parentID;
+        if (data[0].id === dropParent) {
+          this.hideSpinnerMethod();
+        
+          return;
+        }
+        if (data[0].id === findDropIndex) {
+          this.hideSpinnerMethod();
+         
           return;
         }
         data[0].parentID = findDropIndex;
 
         this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
-        // this.dataStateChange();
       }
     },
 
