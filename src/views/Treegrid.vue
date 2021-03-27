@@ -23,7 +23,7 @@
         :actionComplete="actionComplete"
         :dataStateChange="dataStateChange"
         :dataSourceChanged="dataSourceChanged"
-        :actionBegin="actionBegin"
+   
         :editSettings="editSettings"
         :toolbar="toolbar"
       >
@@ -276,10 +276,10 @@ export default {
         this.$refs.treegrid.hideSpinner();
       }
     },
-    actionBegin(args) {
-      console.log("args", args);
-      console.log("fsafasfsa");
-    },
+    // actionBegin(args) {
+    //   console.log("args", args);
+    //   console.log("fsafasfsa");
+    // },
     updateCellFromDrag(isDragged) {
       if (isDragged) {
         this.isDragged = false;
