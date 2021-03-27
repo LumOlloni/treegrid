@@ -12,7 +12,8 @@ export const constantRoutes = [
   },
   {
     path: "/login",
-    component: () => import("@/views/Login.vue"),
+    component: () =>
+      import(/* webpackChunkName: "project-route" */ "@/views/Login.vue"),
     name: "Login",
     meta: {
       guest: true,
@@ -21,7 +22,8 @@ export const constantRoutes = [
   {
     path: "/register",
     name: "Register",
-    component: () => import("@/views/Register.vue"),
+    component: () =>
+      import(/* webpackChunkName: "project-route" */ "@/views/Register.vue"),
     meta: {
       guest: true,
     },
@@ -29,7 +31,8 @@ export const constantRoutes = [
   {
     path: "/treegrid",
     name: "Treegrid",
-    component: () => import("@/views/Treegrid.vue"),
+    component: () =>
+      import(/* webpackChunkName: "project-route" */ "@/views/Treegrid.vue"),
     meta: {
       requiresAuth: true,
     },
