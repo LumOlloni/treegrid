@@ -320,18 +320,22 @@ export default {
       this.dropObj = { ...event };
 
       if (fromIndex !== dropIndex) {
-        let findDropIndex = this.gridData.result[dropIndex].id;
-        let dropParent = this.gridData.result[dropIndex].parentID;
-        if (data[0].id === dropParent) {
+        let findDropIndex = this.gridData.result[dropIndex];
+        let dropParent = this.gridData.result[dropIndex];
+        if (!findDropIndex || !dropParent) {
+          return;
+        }
+
+        if (data[0].id === dropParent.parentID) {
           this.hideSpinnerMethod();
           return;
         }
-        if (data[0].id === findDropIndex) {
+        if (data[0].id === findDropIndex.id) {
           this.hideSpinnerMethod();
           return;
         }
 
-        data[0].parentID = findDropIndex;
+        data[0].parentID = findDropIndex.id;
 
         this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
       }
