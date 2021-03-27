@@ -11,11 +11,10 @@
       </button>
 
       <ejs-treegrid
-        :cellTemplate="cellTemplate"
         :dataSource="allDataSource"
         :treeColumnIndex="1"
         ref="treegrid"
-        :hasChildMapping="true"
+        :allowSelection="true"
         parentIdMapping="parentID"
         :queryCellInfo="queryCellInfo"
         :rowDrop="rowDrop"
@@ -190,7 +189,9 @@ export default {
       orderID: 0,
       blockCell: {},
       shipCountry: "",
+      isDragged: false,
       customerID: "",
+      dropObj: {},
       stompClient: null,
       socket: null,
       timeOut: false,
@@ -220,6 +221,7 @@ export default {
         this.stompClient.send("/data/all", {});
         this.stompClient.subscribe("/table/save", (data) => {
           let socketData = JSON.parse(data.body);
+
           let findIndex = this.gridData.result.findIndex(
             (res) => res.id === socketData.id
           );
@@ -248,10 +250,10 @@ export default {
         this.stompClient.subscribe("/table/all", (data) => {
           let socketData = JSON.parse(data.body);
           this.gridData.result = socketData;
-          console.log(" this.gridData.result", this.gridData.result);
+
           this.gridData.count = socketData.length;
           this.gridData.loading = false;
-          console.log(" this.gridData.count", this.gridData.count);
+
           this.loading = false;
         });
       }
@@ -278,9 +280,24 @@ export default {
       console.log("args", args);
       console.log("fsafasfsa");
     },
+    updateCellFromDrag(isDragged) {
+      if (isDragged) {
+        this.isDragged = false;
+        this.$refs.treegrid.ej2Instances.updateCell(
+          this.dropObj.fromIndex,
+          "order",
+          this.dropObj.fromIndex + 1
+        );
+        this.$refs.treegrid.ej2Instances.updateCell(
+          this.dropObj.dropIndex,
+          "order",
+          this.dropObj.dropIndex + 1
+        );
+      }
+    },
     actionComplete(args) {
       const { requestType } = args;
-
+      this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
         this.blockCell = { name: "asfsa" };
       } else {
@@ -298,21 +315,22 @@ export default {
       }
     },
     rowDrop(event) {
+      this.isDragged = true;
       const { data, fromIndex, dropIndex } = event;
+      this.dropObj = { ...event };
 
       if (fromIndex !== dropIndex) {
         let findDropIndex = this.gridData.result[dropIndex].id;
         let dropParent = this.gridData.result[dropIndex].parentID;
         if (data[0].id === dropParent) {
           this.hideSpinnerMethod();
-
           return;
         }
         if (data[0].id === findDropIndex) {
           this.hideSpinnerMethod();
-
           return;
         }
+
         data[0].parentID = findDropIndex;
 
         this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
