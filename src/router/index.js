@@ -6,8 +6,22 @@ Vue.use(Router);
 export const constantRoutes = [
   {
     path: "/",
+    redirect: () => {
+      return "/login";
+    },
+  },
+  {
+    path: "/login",
     component: () => import("@/views/Login.vue"),
     name: "Login",
+    meta: {
+      guest: true,
+    },
+  },
+  {
+    path: "/register",
+    name: "Register",
+    component: () => import("@/views/Register.vue"),
     meta: {
       guest: true,
     },

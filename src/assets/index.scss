@@ -1,2 +1,26 @@
+@import "./styles/material.css";
 
-@import './styles/material.css';
+.wrapper {
+  background: #f8f9fa;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  form {
+    padding: 70px;
+    border: 1px solid #ccc;
+    background: white;
+    width: 100%;
+    max-width: 500px;
+
+    a {
+      display: block;
+      color: white !important;
+      margin: 0 auto;
+      max-width: 150px;
+      width: 100%;
+    }
+  }
+}
