@@ -23,7 +23,6 @@
         :actionComplete="actionComplete"
         :dataStateChange="dataStateChange"
         :dataSourceChanged="dataSourceChanged"
-   
         :editSettings="editSettings"
         :toolbar="toolbar"
       >
@@ -315,30 +314,33 @@ export default {
       }
     },
     rowDrop(event) {
-      this.isDragged = true;
       const { data, fromIndex, dropIndex } = event;
       this.dropObj = { ...event };
 
-      if (fromIndex !== dropIndex) {
-        let findDropIndex = this.gridData.result[dropIndex];
-        let dropParent = this.gridData.result[dropIndex];
-        if (!findDropIndex || !dropParent) {
-          return;
-        }
+      if (fromIndex === dropIndex) return;
 
-        if (data[0].id === dropParent.parentID) {
-          this.hideSpinnerMethod();
-          return;
-        }
-        if (data[0].id === findDropIndex.id) {
-          this.hideSpinnerMethod();
-          return;
-        }
+      let findDropIndex = this.gridData.result[dropIndex];
+      let dropParent = this.gridData.result[dropIndex];
 
-        data[0].parentID = findDropIndex.id;
-
-        this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
+      if (!findDropIndex || !dropParent) {
+        return;
       }
+
+      if (data[0].id === dropParent.parentID) {
+        this.hideSpinnerMethod();
+        return;
+      }
+
+      if (data[0].id === findDropIndex.id) {
+        this.hideSpinnerMethod();
+        return;
+      }
+
+      this.isDragged = true;
+
+      data[0].parentID = findDropIndex.id;
+
+      this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
     },
 
     sendData(state) {
@@ -347,6 +349,7 @@ export default {
       for (let colomns of this.columns) {
         objData[colomns] = alldata[colomns];
       }
+
       if (!objData.parentID) {
         objData.parentID = null;
       }
