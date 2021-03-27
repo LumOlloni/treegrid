@@ -7,6 +7,8 @@ Vue.use(Vuex);
 const store = new Vuex.Store({
   state: {
     response: false,
+    user: {},
+    isSuccessAuth: false,
     productData: {
       result: [],
       // loading: false,
@@ -15,8 +17,15 @@ const store = new Vuex.Store({
   },
   getters: {
     productData: (state) => state.productData,
+    user: (state) => state.user,
+    isSuccessAuth: (state) => state.isSuccessAuth,
   },
   mutations: {
+    SET_IS_SUCCESS_AUTH: (state, isSuccessAuth) => {
+      localStorage.setItem("user-token", true);
+      state.isSuccessAuth = isSuccessAuth;
+    },
+    SET_USER: (state, user) => (state.user = user),
     SUCCESS: (state, response) => {
       state.response = response;
     },
@@ -32,6 +41,15 @@ const store = new Vuex.Store({
     },
   },
   actions: {
+    login({ commit }, data) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(data);
+          commit("SET_USER", data);
+          commit("SET_IS_SUCCESS_AUTH", true);
+        }, 3000);
+      });
+    },
     async getProductData({ commit }) {
       // try {
       //   const res = await axios.get("http://localhost:8090/products/all");
@@ -43,7 +61,7 @@ const store = new Vuex.Store({
       return new Promise((resolve) => {
         axios.get("http://localhost:8090/products/all").then((res) => {
           resolve(res.data);
-        
+
           commit("SUCCESS");
         });
       });

@@ -37,6 +37,8 @@ export default {
   },
   methods: {
     submitForm() {
+      localStorage.setItem("user-token", true);
+      
       this.$router.push({ name: "Treegrid" });
     },
   },

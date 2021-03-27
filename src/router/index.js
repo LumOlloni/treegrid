@@ -7,6 +7,7 @@ export const constantRoutes = [
   {
     path: "/",
     component: () => import("@/views/Login.vue"),
+    name: "Login",
     meta: {
       guest: true,
     },
@@ -16,7 +17,7 @@ export const constantRoutes = [
     name: "Treegrid",
     component: () => import("@/views/Treegrid.vue"),
     meta: {
-      guest: true,
+      requiresAuth: true,
     },
   },
 ];
@@ -28,5 +29,17 @@ const createRouter = () =>
   });
 
 const router = createRouter();
+
+router.beforeEach((to, from, next) => {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!localStorage.getItem("user-token")) {
+      next({ path: "/" });
+    } else next();
+  } else if (to.matched.some((record) => record.meta.guest)) {
+    if (!localStorage.getItem("user-token")) {
+      next();
+    } else next({ path: "/treegrid" });
+  }
+});
 
 export default router;
