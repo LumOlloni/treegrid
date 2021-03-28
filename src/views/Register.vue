@@ -48,8 +48,15 @@
           placeholder="Password"
         />
       </div>
+      <p
+        :class="[notify.type ? 'text-success' : 'text-danger']"
+        class="lead "
+        v-if="notify.msg"
+      >
+        {{ notify.msg }}
+      </p>
 
-      <a @click="register" type="submit" class="btn btn-primary">
+      <a @click="registerForm" type="submit" class="btn btn-primary">
         Register
       </a>
     </form>
@@ -57,19 +64,42 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 export default {
   name: "Register",
   data() {
     return {
       email: "",
+      notify: {
+        msg: "",
+      },
       password: "",
       username: "",
       confirmPassword: "",
     };
   },
   methods: {
-    register() {
-      console.log("register");
+    ...mapActions(["register"]),
+    async registerForm() {
+      if (this.password !== this.confirmPassword) {
+        this.notify.msg = "Password and Confirm Pasword not match";
+        this.notify.type = false;
+        return;
+      }
+
+      let data = {
+        email: this.email,
+        userName: this.username,
+        password: this.password,
+      };
+
+      const { message, registerSuccess } = await this.register({
+        data: data,
+        router: this.$router,
+      });
+
+      this.notify.msg = message;
+      this.notify.type = registerSuccess;
     },
   },
 };

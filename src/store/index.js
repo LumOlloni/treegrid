@@ -21,8 +21,7 @@ const store = new Vuex.Store({
     isSuccessAuth: (state) => state.isSuccessAuth,
   },
   mutations: {
-    SET_IS_SUCCESS_AUTH: (state, isSuccessAuth) => {
-      localStorage.setItem("user-token", true);
+    SET_IS_SUCCESS_AUTH: (state, { isSuccessAuth }) => {
       state.isSuccessAuth = isSuccessAuth;
     },
     SET_USER: (state, user) => (state.user = user),
@@ -41,6 +40,30 @@ const store = new Vuex.Store({
     },
   },
   actions: {
+    async register({ commit }, { data, router }) {
+      try {
+        const res = await axios.post("http://localhost:8090/register", data);
+
+        commit("SET_IS_SUCCESS_AUTH", true);
+        // res.data.message = "You Successfully Register please login";
+        // res.data.registerSuccess = true;
+
+        setTimeout(() => {
+          router.push({ path: "/login" });
+        }, 2000);
+
+        return {
+          ...res.data,
+          message: "You Successfully Register please login",
+          registerSuccess: true,
+        };
+      } catch (err) {
+        console.log("err", err);
+        router.push({ path: "/register" });
+
+        return err;
+      }
+    },
     login({ commit }, data) {
       return new Promise((resolve) => {
         setTimeout(() => {
