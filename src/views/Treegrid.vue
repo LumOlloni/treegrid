@@ -229,9 +229,9 @@ export default {
       const { id } = this.blockCell;
 
       let dataToSend = {
-        product_id: id,
-        column_name: this.valueOfSelect,
-        tr_user: this.user.userId,
+        productInfo: id,
+        columnName: this.valueOfSelect,
+        treeUser: this.user.userId,
       };
 
       if (typeOfAction === "lock") {
