@@ -133,6 +133,7 @@ export default {
       blockCell: {},
       shipCountry: "",
       groupCell: [],
+      allUserBlockedCell: [],
       isDragged: false,
       valueOfSelect: "",
       customerID: "",
@@ -195,6 +196,11 @@ export default {
         this.stompClient.subscribe("/table/all", (data) => {
           let socketData = JSON.parse(data.body);
           this.groupCell = groupLock(socketData, this.user.userId);
+          this.allUserBlockedCell = groupLock(
+            socketData,
+            this.user.userId,
+            false
+          );
           this.gridData.result = socketData;
           this.gridData.count = socketData.length;
           this.gridData.loading = false;
@@ -229,7 +235,6 @@ export default {
       const { id } = this.blockCell;
 
       let dataToSend = {
-        id: null,
         productInfo: id,
         columnName: this.valueOfSelect,
         treeUser: this.user.userId,
@@ -238,8 +243,22 @@ export default {
       if (typeOfAction === "lock") {
         this.stompClient.send("/data/lock", {}, JSON.stringify(dataToSend));
       } else if (typeOfAction === "unlock") {
-        this.stompClient.send("/data/unlock", {}, JSON.stringify(dataToSend));
+        let unlockCell = this.allUserBlockedCell.find(
+          (blocked) =>
+            blocked.productInfo === id &&
+            blocked.columName === dataToSend.columnName
+        );
+
+        if (unlockCell && unlockCell.id) {
+          this.stompClient.send(
+            "/data/unlock",
+            {},
+            JSON.stringify(Number(unlockCell.id))
+          );
+        }
       }
+
+      this.blockCell = {};
     },
     selectCellBlock(e) {
       this.valueOfSelect = e.target.value;
