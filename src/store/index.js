@@ -8,6 +8,7 @@ const store = new Vuex.Store({
   state: {
     response: false,
     user: {},
+    token: "",
     isSuccessAuth: false,
     productData: {
       result: [],
@@ -17,13 +18,19 @@ const store = new Vuex.Store({
   },
   getters: {
     productData: (state) => state.productData,
+    token: (state) => state.token,
     user: (state) => state.user,
     isSuccessAuth: (state) => state.isSuccessAuth,
   },
   mutations: {
+    SET_TOKEN: (state, token) => {
+      state.token = token;
+      localStorage.setItem("user-token", true);
+    },
     SET_IS_SUCCESS_AUTH: (state, { isSuccessAuth }) => {
       state.isSuccessAuth = isSuccessAuth;
     },
+
     SET_USER: (state, user) => (state.user = user),
     SUCCESS: (state, response) => {
       state.response = response;
@@ -45,8 +52,6 @@ const store = new Vuex.Store({
         const res = await axios.post("http://localhost:8090/register", data);
 
         commit("SET_IS_SUCCESS_AUTH", true);
-        // res.data.message = "You Successfully Register please login";
-        // res.data.registerSuccess = true;
 
         setTimeout(() => {
           router.push({ path: "/login" });
@@ -64,68 +69,15 @@ const store = new Vuex.Store({
         return err;
       }
     },
-    login({ commit }, data) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(data);
-          commit("SET_USER", data);
-          commit("SET_IS_SUCCESS_AUTH", true);
-        }, 3000);
-      });
-    },
-    async getProductData({ commit }) {
-      // try {
-      //   const res = await axios.get("http://localhost:8090/products/all");
-      //   commit("SET_PRODUCT_DATA", res.data);
-      //   commit("SUCCESS");
-      // } catch (error) {
-      //   console.error(error);
-      // }
-      return new Promise((resolve) => {
-        axios.get("http://localhost:8090/products/all").then((res) => {
-          resolve(res.data);
-
-          commit("SUCCESS");
-        });
-      });
-    },
-    async deleteProduct({ commit }, { TaskID, state }) {
+    async login({ commit }, { data, router }) {
       try {
-        await axios.post(
-          "http://localhost:8090/products/delete",
-          {},
-          {
-            params: {
-              TaskID: TaskID,
-            },
-          }
-        );
-        commit("SUCCESS");
-        state.endEdit();
+        const res = await axios.post("http://localhost:8090/login", data);
+        commit("SET_TOKEN", res.data);
+        router.push({ path: "/treegrid" });
+        return res.data;
       } catch (error) {
         console.error(error);
       }
-    },
-
-    async saveProducts({ commit }, { dataToSend, state }) {
-      try {
-        await axios.post("http://localhost:8090/products/save", dataToSend);
-        // resolve(res.data);
-        commit("SUCCESS");
-        state.endEdit();
-      } catch (error) {
-        console.error(error);
-      }
-      // return new Promise((resolve) => {
-      //   axios
-      //     .post("http://localhost:8090/products/save", dataToSend)
-      //     .then((res) => {
-      //       console.log("res", res.data);
-
-      //       commit("SUCCESS");
-      //     })
-      //     .catch((err) => console.log("err", err));
-      // });
     },
   },
 });

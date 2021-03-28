@@ -6,6 +6,7 @@
         <input
           type="email"
           v-model="email"
+          required
           class="form-control"
           id="exampleInputEmail1"
           aria-describedby="emailHelp"
@@ -17,6 +18,7 @@
         <input
           v-model="password"
           type="password"
+          required
           class="form-control"
           id="exampleInputPassword1"
           placeholder="Password"
@@ -39,6 +41,7 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 export default {
   name: "Login",
   data() {
@@ -48,10 +51,13 @@ export default {
     };
   },
   methods: {
+    ...mapActions(["login"]),
     submitForm() {
-      localStorage.setItem("user-token", true);
-
-      this.$router.push({ name: "Treegrid" });
+      let data = {
+        email: this.email,
+        password: this.password,
+      };
+      this.login({ data, router: this.$router });
     },
     goToRegister() {
       console.log("register");
