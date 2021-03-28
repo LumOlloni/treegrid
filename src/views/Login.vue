@@ -2,10 +2,10 @@
   <div class="wrapper">
     <form>
       <div class="form-group">
-        <label for="exampleInputEmail1">Email address</label>
+        <label for="exampleInputEmail1">Username</label>
         <input
-          type="email"
-          v-model="email"
+          type="text"
+          v-model="username"
           required
           class="form-control"
           id="exampleInputEmail1"
@@ -46,7 +46,7 @@ export default {
   name: "Login",
   data() {
     return {
-      email: "",
+      username: "",
       password: "",
     };
   },
@@ -54,13 +54,12 @@ export default {
     ...mapActions(["login"]),
     submitForm() {
       let data = {
-        email: this.email,
+        username: this.username,
         password: this.password,
       };
       this.login({ data, router: this.$router });
     },
     goToRegister() {
-      console.log("register");
       this.$router.push({ path: "/register" });
     },
   },

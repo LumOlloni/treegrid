@@ -2,6 +2,7 @@ import Vue from "vue";
 import Vuex from "vuex";
 import axios from "axios";
 import Response from "@/helpers/Response";
+import VueJwtDecode from "vue-jwt-decode";
 
 Vue.use(Vuex);
 
@@ -9,7 +10,7 @@ const store = new Vuex.Store({
   state: {
     response: false,
     user: {},
-    token: "",
+    token: localStorage.getItem("user-token") || "",
     isSuccessAuth: false,
     productData: {
       result: [],
@@ -26,7 +27,8 @@ const store = new Vuex.Store({
   mutations: {
     SET_TOKEN: (state, token) => {
       state.token = token;
-      localStorage.setItem("user-token", true);
+      state.user = VueJwtDecode.decode(token);
+      localStorage.setItem("user-token", token);
     },
     SET_IS_SUCCESS_AUTH: (state, { isSuccessAuth }) => {
       state.isSuccessAuth = isSuccessAuth;

@@ -1,14 +1,15 @@
 <template>
   <div class="wrapper-treegrid">
     <h1 v-if="loading">Loading</h1>
-
+    <!--   -->
     <template v-else>
-      <button
-        :class="{ blockObjectState: !blockObjectState }"
-        class="btn btn-danger mt-3 mb-3"
-      >
-        Block
-      </button>
+      <SelectBox
+        :selectUnBlockCell="selectUnBlockCell"
+        :selectCellBlock="selectCellBlock"
+        :blockObjectState="blockObjectState"
+        :lockUnLockCell="lockUnLockCell"
+        :columns="columns"
+      />
 
       <ejs-treegrid
         :dataSource="allDataSource"
@@ -92,90 +93,33 @@ import {
   RowDD,
   Selection,
 } from "@syncfusion/ej2-vue-treegrid";
+import { groupLock } from "@/helpers/GroupLocks";
 
 import SockJS from "sockjs-client";
 import Stomp from "stomp-websocket";
-import Vue from "vue";
+import SelectBox from "@/components/SelectBox.vue";
+import { mapGetters } from "vuex";
 
-var cellTemplateVue = Vue.component("cellTemplate", {
-  template: `<div class="templatewrap"><div v-if="data.type==='workCells'"><div v-html=getWorkCellText(data.date)></div></div><div v-else-if="data.type==='monthCells'"><div v-html=getMonthCellText(data.date)></div></div></div>`,
-  data() {
-    return {
-      data: {},
-    };
-  },
-  methods: {
-    getWorkCellText: function(date) {
-      let weekEnds = [0, 6];
-      if (weekEnds.indexOf(date.getDay()) >= 0) {
-        return "<img src='https://ej2.syncfusion.com/demos/src/schedule/images/newyear.svg' />";
-      }
-      return "";
-    },
-    getMonthCellText: function(date) {
-      if (date.getMonth() === 10 && date.getDate() === 23) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/birthday.svg"/>';
-      } else if (date.getMonth() === 11 && date.getDate() === 9) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/get-together.svg" />';
-      } else if (date.getMonth() === 11 && date.getDate() === 13) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/birthday.svg" />';
-      } else if (date.getMonth() === 11 && date.getDate() === 22) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/thanksgiving-day.svg" />';
-      } else if (date.getMonth() === 11 && date.getDate() === 24) {
-        return '<img src="https://ej2.syncfusion.com/demos/src/schedule/images/christmas-eve.svg" />';
-      } else if (date.getMonth() === 11 && date.getDate() === 25) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/christmas.svg" />';
-      } else if (date.getMonth() === 0 && date.getDate() === 1) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/newyear.svg" />';
-      } else if (date.getMonth() === 0 && date.getDate() === 14) {
-        return '<img src= "https://ej2.syncfusion.com/demos/src/schedule/images/birthday.svg" />';
-      }
-      return "";
-    },
-  },
-});
 export default {
   name: "Treegrid",
+  components: {
+    SelectBox,
+  },
   data() {
     return {
-      cellTemplate: function() {
-        return {
-          template: cellTemplateVue,
-        };
-      },
-      // editTemplate: () => {
-      //   return {
-      //     template: Vue.component("inputTemp", {
-      //       template: `<div class="e-input-group e-control-wrapper">
-      //       <input class="e-field e-input e-defaultcell"  type="text" />
-      //       <span class="e-input-group-icon e-icons e-search" v-on:click="searchClick"></span>
-      //              </div>`,
-      //       data: function() {
-      //         return {
-      //           data: {},
-      //         };
-      //       },
-      //       methods: {
-      //         searchClick: (args) => {
-      //           console.log("args", args);
-      //           // Icon span tag click event
-      //           // Here you can perform your required actions
-      //         },
-      //       },
-      //     }),
-      //   };
-      // },
+      // id , lhs , description , qty , total , unit , netwt , pricePer , source
       columns: [
-        "description",
         "id",
         "lhs",
-        "netwt",
-        "parentID",
-        "pricePer",
+        "description",
         "qty",
-        "source",
         "total",
         "unit",
+        "netwt",
+        "pricePer",
+        "source",
+        "unit",
+        "parentID",
       ],
       test: "",
       editSettings: {
@@ -188,7 +132,9 @@ export default {
       orderID: 0,
       blockCell: {},
       shipCountry: "",
+      groupCell: [],
       isDragged: false,
+      valueOfSelect: "",
       customerID: "",
       dropObj: {},
       stompClient: null,
@@ -248,18 +194,27 @@ export default {
 
         this.stompClient.subscribe("/table/all", (data) => {
           let socketData = JSON.parse(data.body);
+          this.groupCell = groupLock(socketData, this.user.userId);
           this.gridData.result = socketData;
-
           this.gridData.count = socketData.length;
           this.gridData.loading = false;
 
           this.loading = false;
         });
+
+        this.stompClient.subscribe("/table/lock", (data) => {
+          console.log("lock", JSON.parse(data));
+        });
+
+        this.stompClient.subscribe("/table/unlock", (data) => {
+          // console.log("unlock", JSON.parse(data));
+          console.log("unlock", data);
+        });
       }
     });
-    // setTimeout(() => this.$refs.treegrid.showSpinner(), 0);
   },
   computed: {
+    ...mapGetters(["user"]),
     blockObjectState() {
       return Object.keys(this.blockCell).length;
     },
@@ -268,6 +223,30 @@ export default {
     },
   },
   methods: {
+    lockUnLockCell(typeOfAction) {
+      if (this.valueOfSelect === "-1" || this.valueOfSelect === "") return;
+
+      const { id } = this.blockCell;
+
+      let dataToSend = {
+        product_id: id,
+        column_name: this.valueOfSelect,
+        tr_user: this.user.userId,
+      };
+
+      if (typeOfAction === "lock") {
+        this.stompClient.send("/data/lock", {}, JSON.stringify(dataToSend));
+      } else if (typeOfAction === "unlock") {
+        this.stompClient.send("/data/unlock", {}, JSON.stringify(dataToSend));
+      }
+    },
+    selectCellBlock(e) {
+      this.valueOfSelect = e.target.value;
+    },
+    selectUnBlockCell(e) {
+      this.valueOfSelect = e.target.value;
+    },
+
     hideSpinnerMethod() {
       let spinner = document.querySelector(".e-spinner-pane");
       if (spinner !== null) {
@@ -275,10 +254,6 @@ export default {
         this.$refs.treegrid.hideSpinner();
       }
     },
-    // actionBegin(args) {
-    //   console.log("args", args);
-    //   console.log("fsafasfsa");
-    // },
     updateCellFromDrag(isDragged) {
       if (isDragged) {
         this.isDragged = false;
@@ -295,22 +270,48 @@ export default {
       }
     },
     actionComplete(args) {
-      const { requestType } = args;
+      const {
+        rowData: { id },
+        requestType,
+      } = args;
       this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
-        this.blockCell = { name: "asfsa" };
+        let findCellToLock =
+          this.groupCell.find((lock) => lock.id === id) || [];
+
+        if (Object.keys(findCellToLock).length > 0) {
+          let findPosOfColum = this.columns.indexOf(findCellToLock.columName);
+          if (findPosOfColum > -1) {
+            let findCell = document.querySelectorAll(
+              "#_gridcontrolEditForm > table > tbody > tr > td "
+            )[findPosOfColum + 1];
+
+            findCell.style.pointerEvents = "none";
+            findCell.style.background = "rgba(236, 240, 241, 0.5)";
+          }
+        }
+
+        this.blockCell = {
+          id: id,
+        };
       } else {
         this.blockCell = {};
       }
     },
     queryCellInfo(args) {
-      let data = args.data;
-      if (args.column.field === "total" && data.id === 1) {
-        let i = document.createElement("i");
-        i.classList.add("fa", "fa-lock");
-        args.cell.style.pointerEvents = "none";
-        args.cell.style.background = "rgba(236, 240, 241, 0.5)";
-        args.cell.appendChild(i);
+      let cells = args.data;
+
+      for (const lockCell of this.groupCell) {
+        if (
+          args.column.field === lockCell.columName &&
+          cells.id === lockCell.productInfo
+        ) {
+          let i = document.createElement("i");
+          i.classList.add("fa", "fa-lock");
+          args.cell.style.pointerEvents = "none";
+          args.cell.style.background = "rgba(236, 240, 241, 0.5)";
+          args.cell.appendChild(i);
+        }
       }
     },
     rowDrop(event) {
