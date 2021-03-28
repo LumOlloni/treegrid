@@ -229,6 +229,7 @@ export default {
       const { id } = this.blockCell;
 
       let dataToSend = {
+        id: null,
         productInfo: id,
         columnName: this.valueOfSelect,
         treeUser: this.user.userId,
@@ -269,18 +270,14 @@ export default {
         );
       }
     },
-    actionComplete(args) {
-      const {
-        rowData: { id },
-        requestType,
-      } = args;
-      this.updateCellFromDrag(this.isDragged);
-      if (requestType === "beginEdit") {
-        let findCellToLock =
-          this.groupCell.find((lock) => lock.id === id) || {};
+    blockCellInEdit(id) {
+      let findCellToLock = this.groupCell.filter((lock) => lock.id === id);
 
-        if (Object.keys(findCellToLock).length > 0) {
-          let findPosOfColum = this.columns.indexOf(findCellToLock.columName);
+      if (findCellToLock.length > 0) {
+        let cellToBeLock = findCellToLock.map((e) => e.columName);
+
+        for (const cell of cellToBeLock) {
+          let findPosOfColum = this.columns.indexOf(cell);
           if (findPosOfColum > -1) {
             let findCell = document.querySelectorAll(
               "#_gridcontrolEditForm > table > tbody > tr > td "
@@ -290,7 +287,16 @@ export default {
             findCell.style.background = "rgba(236, 240, 241, 0.5)";
           }
         }
-
+      }
+    },
+    actionComplete(args) {
+      const {
+        rowData: { id },
+        requestType,
+      } = args;
+      this.updateCellFromDrag(this.isDragged);
+      if (requestType === "beginEdit") {
+        this.blockCellInEdit(id);
         this.blockCell = {
           id: id,
         };
