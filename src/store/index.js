@@ -1,6 +1,7 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import axios from "axios";
+import Response from "@/helpers/Response";
 
 Vue.use(Vuex);
 
@@ -37,12 +38,6 @@ const store = new Vuex.Store({
     },
     SET_PRODUCT_DATA: (state, productData) => {
       state.productData.result = productData;
-      // .map((product) => {
-      //   if (product.parentID === null) {
-      //     delete product.parentID;
-      //   }
-      //   return { ...product };
-      // });
       state.productData.count = productData.length;
     },
   },
@@ -57,11 +52,11 @@ const store = new Vuex.Store({
           router.push({ path: "/login" });
         }, 2000);
 
-        return {
-          ...res.data,
-          message: "You Successfully Register please login",
-          registerSuccess: true,
-        };
+        return new Response(
+          res.data,
+          "You Successfully Register please login",
+          true
+        );
       } catch (err) {
         console.log("err", err);
         router.push({ path: "/register" });

@@ -93,13 +93,22 @@ export default {
         password: this.password,
       };
 
-      const { message, registerSuccess } = await this.register({
+      const { message, responseType } = await this.register({
         data: data,
         router: this.$router,
       });
 
       this.notify.msg = message;
-      this.notify.type = registerSuccess;
+      this.notify.type = responseType;
+
+      this.clearFields();
+    },
+
+    clearFields() {
+      let fields = ["email", "username", "password", "confirmPassword"];
+      for (const field of fields) {
+        this[field] = "";
+      }
     },
   },
 };
