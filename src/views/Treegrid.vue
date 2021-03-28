@@ -306,6 +306,8 @@ export default {
           args.column.field === lockCell.columName &&
           cells.id === lockCell.productInfo
         ) {
+          if (args.cell.childNodes.length > 1) return;
+
           let i = document.createElement("i");
           i.classList.add("fa", "fa-lock");
           args.cell.style.pointerEvents = "none";
