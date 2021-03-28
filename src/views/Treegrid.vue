@@ -277,7 +277,7 @@ export default {
       this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
         let findCellToLock =
-          this.groupCell.find((lock) => lock.id === id) || [];
+          this.groupCell.find((lock) => lock.id === id) || {};
 
         if (Object.keys(findCellToLock).length > 0) {
           let findPosOfColum = this.columns.indexOf(findCellToLock.columName);
