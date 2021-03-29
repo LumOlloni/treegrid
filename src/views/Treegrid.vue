@@ -223,8 +223,6 @@ export default {
 
             if (findRow && findRow.row) {
               let findIndexOfColumn = this.columns.indexOf(blocked.columName);
-
-              console.log("object");
               let rowToBlock = findRow.row.getElementsByTagName("td")[
                 findIndexOfColumn + 1
               ];
@@ -245,8 +243,41 @@ export default {
         });
 
         this.stompClient.subscribe("/table/unlock", (data) => {
-          // console.log("unlock", JSON.parse(data));
-          console.log("unlock", data);
+          let unblocked = JSON.parse(data.body);
+          if (unblocked.treeUser !== this.user.userId) {
+            let index = this.groupCell.findIndex(
+              (cell) => cell.id === unblocked.columnLock
+            );
+            let findRow = this.groupAllRows.find(
+              (row) => row.idRow === unblocked.producktInfo
+            );
+
+            if (find && findRow.row) {
+              let findIndexOfColumn = this.columns.indexOf(
+                unblocked.columnName
+              );
+              let rowToUnBlock = findRow.row.getElementsByTagName("td")[
+                findIndexOfColumn + 1
+              ];
+              let lock = rowToUnBlock.getElementsByTagName("i");
+
+              if (lock.length > 0) {
+                lock[0].remove();
+              }
+
+              rowToUnBlock.style.pointerEvents = "pointer";
+              rowToUnBlock.style.background = "white";
+            }
+
+            if (index > -1) {
+              this.groupCell.splice(index, 1);
+            }
+          } else {
+            let findIndex = this.allUserBlockedCell.findIndex(
+              (cell) => cell.id === unblocked.id
+            );
+            this.allUserBlockedCell.splice(findIndex, 1);
+          }
         });
       }
     });
