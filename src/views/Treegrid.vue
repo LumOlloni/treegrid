@@ -274,7 +274,7 @@ export default {
             }
           } else {
             let findIndex = this.allUserBlockedCell.findIndex(
-              (cell) => cell.id === unblocked.id
+              (cell) => cell.id === unblocked.columnLock
             );
             this.allUserBlockedCell.splice(findIndex, 1);
           }
