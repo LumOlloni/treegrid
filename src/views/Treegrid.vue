@@ -16,13 +16,13 @@
         :treeColumnIndex="1"
         ref="treegrid"
         :allowSelection="true"
+        :rowDataBound="rowDataBound"
         parentIdMapping="parentID"
         :queryCellInfo="queryCellInfo"
         :rowDrop="rowDrop"
         :allowRowDragAndDrop="true"
         idMapping="id"
         :actionComplete="actionComplete"
-        :dataStateChange="dataStateChange"
         :dataSourceChanged="dataSourceChanged"
         :editSettings="editSettings"
         :toolbar="toolbar"
@@ -133,6 +133,7 @@ export default {
       blockCell: {},
       shipCountry: "",
       groupCell: [],
+      groupAllRows: [],
       allUserBlockedCell: [],
       isDragged: false,
       valueOfSelect: "",
@@ -152,7 +153,6 @@ export default {
   },
 
   mounted() {
-    this.dataStateChange();
     setTimeout(() => {
       this.hideSpinnerMethod();
     }, 1000);
@@ -209,7 +209,39 @@ export default {
         });
 
         this.stompClient.subscribe("/table/lock", (data) => {
-          console.log("lock", JSON.parse(data));
+          let blocked = JSON.parse(data.body);
+          if (blocked.treeUser !== this.user.userId) {
+            let findIndex = this.groupCell.findIndex(
+              (cell) => cell.id === blocked.id
+            );
+            if (findIndex === -1) {
+              this.groupCell.push(blocked);
+            }
+            let findRow = this.groupAllRows.find(
+              (row) => row.idRow === blocked.productInfo
+            );
+
+            if (findRow && findRow.row) {
+              let findIndexOfColumn = this.columns.indexOf(blocked.columName);
+
+              console.log("object");
+              let rowToBlock = findRow.row.getElementsByTagName("td")[
+                findIndexOfColumn + 1
+              ];
+              let i = document.createElement("i");
+              i.classList.add("fa", "fa-lock");
+              rowToBlock.style.pointerEvents = "none";
+              rowToBlock.style.background = "rgba(236, 240, 241, 0.5)";
+              rowToBlock.appendChild(i);
+            }
+          } else {
+            let findIndex = this.allUserBlockedCell.findIndex(
+              (cell) => cell.id === blocked.id
+            );
+            if (findIndex === -1) {
+              this.allUserBlockedCell.push(blocked);
+            }
+          }
         });
 
         this.stompClient.subscribe("/table/unlock", (data) => {
@@ -229,6 +261,12 @@ export default {
     },
   },
   methods: {
+    rowDataBound(args) {
+      // args.row.getElementsByTagName("td")
+      if (!this.groupAllRows.find((row) => row.idRow === args.data.id)) {
+        this.groupAllRows.push({ idRow: args.data.id, row: args.row });
+      }
+    },
     lockUnLockCell(typeOfAction) {
       if (this.valueOfSelect === "-1" || this.valueOfSelect === "") return;
 
@@ -290,7 +328,9 @@ export default {
       }
     },
     blockCellInEdit(id) {
-      let findCellToLock = this.groupCell.filter((lock) => lock.id === id);
+      let findCellToLock = this.groupCell.filter(
+        (lock) => lock.productInfo === id
+      );
 
       if (findCellToLock.length > 0) {
         let cellToBeLock = findCellToLock.map((e) => e.columName);
@@ -309,12 +349,12 @@ export default {
       }
     },
     actionComplete(args) {
-      const {
-        rowData: { id },
-        requestType,
-      } = args;
+      const { requestType } = args;
       this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
+        const {
+          rowData: { id },
+        } = args;
         this.blockCellInEdit(id);
         this.blockCell = {
           id: id,
@@ -325,6 +365,10 @@ export default {
     },
     queryCellInfo(args) {
       let cells = args.data;
+
+      if (!this.groupCell.length) {
+        return;
+      }
 
       for (const lockCell of this.groupCell) {
         if (
@@ -384,9 +428,6 @@ export default {
 
       return objData;
     },
-    dataStateChange: function() {
-      // this.stompClient.send("/data/all");
-    },
 
     dataSourceChanged: function(state) {
       if (state.action === "add") {
@@ -399,6 +440,10 @@ export default {
         state.endEdit();
       } else if (state.requestType === "delete") {
         const { id } = state.data[0];
+        let index = this.groupAllRows.findIndex((row) => row.idRow === id);
+        if (index > -1) {
+          this.groupAllRows.splice(index, 1);
+        }
         let objToSend = {
           id: id,
         };
