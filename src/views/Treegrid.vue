@@ -406,6 +406,11 @@ export default {
     },
     actionComplete(args) {
       const { requestType } = args;
+      if (requestType === "add") {
+        args.form.getElementsByTagName("input")[0].style.pointerEvents = "none";
+        args.form.getElementsByTagName("input")[0].style.background =
+          "rgba(236, 240, 241, 0.5)";
+      }
       this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
         const {
@@ -422,9 +427,9 @@ export default {
     queryCellInfo(args) {
       let cells = args.data;
 
-      if (args.column.field === 'id') {
-          args.cell.style.pointerEvents = "none";
-          args.cell.style.background = "rgba(236, 240, 241, 0.5)";
+      if (args.column.field === "id") {
+        args.cell.style.pointerEvents = "none";
+        args.cell.style.background = "rgba(236, 240, 241, 0.5)";
       }
 
       if (this.allUserBlockedCell.length > 0) {
