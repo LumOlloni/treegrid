@@ -422,6 +422,11 @@ export default {
     queryCellInfo(args) {
       let cells = args.data;
 
+      if (args.column.field === 'id') {
+          args.cell.style.pointerEvents = "none";
+          args.cell.style.background = "rgba(236, 240, 241, 0.5)";
+      }
+
       if (this.allUserBlockedCell.length > 0) {
         for (const lockCell of this.allUserBlockedCell) {
           if (
