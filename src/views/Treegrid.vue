@@ -236,6 +236,19 @@ export default {
             let findIndex = this.allUserBlockedCell.findIndex(
               (cell) => cell.id === blocked.id
             );
+
+            let findRow = this.groupAllRows.find(
+              (row) => row.idRow === blocked.productInfo
+            );
+
+            if (findRow && findRow.row) {
+              let findIndexOfColumn = this.columns.indexOf(blocked.columName);
+              let rowToBlock = findRow.row.getElementsByTagName("td")[
+                findIndexOfColumn + 2
+              ];
+              rowToBlock.style.background = "green";
+            }
+
             if (findIndex === -1) {
               this.allUserBlockedCell.push(blocked);
             }
@@ -276,6 +289,18 @@ export default {
             let findIndex = this.allUserBlockedCell.findIndex(
               (cell) => cell.id === unblocked.columnLock
             );
+
+            let findRow = this.groupAllRows.find(
+              (row) => row.idRow === unblocked.producktInfo
+            );
+
+            let findIndexOfColumn = this.columns.indexOf(unblocked.columnName);
+            let rowToUnBlock = findRow.row.getElementsByTagName("td")[
+              findIndexOfColumn + 1
+            ];
+
+            rowToUnBlock.style.background = "white";
+
             this.allUserBlockedCell.splice(findIndex, 1);
           }
         });
@@ -396,6 +421,17 @@ export default {
     },
     queryCellInfo(args) {
       let cells = args.data;
+
+      if (this.allUserBlockedCell.length > 0) {
+        for (const lockCell of this.allUserBlockedCell) {
+          if (
+            args.column.field === lockCell.columName &&
+            cells.id === lockCell.productInfo
+          ) {
+            args.cell.style.background = "green";
+          }
+        }
+      }
 
       if (!this.groupCell.length) {
         return;
