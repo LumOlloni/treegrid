@@ -442,6 +442,7 @@ export default {
       this.isDragged = true;
 
       data[0].parentID = findDropIndex.id;
+      delete data[0].columLocks;
 
       this.stompClient.send("/data/save", {}, JSON.stringify(data[0]));
     },
@@ -467,6 +468,7 @@ export default {
         state.endEdit();
       } else if (state.action === "edit") {
         let dataToSend = this.sendData(state);
+        delete dataToSend.columLocks;
         this.stompClient.send("/data/save", {}, JSON.stringify(dataToSend));
         state.endEdit();
       } else if (state.requestType === "delete") {
