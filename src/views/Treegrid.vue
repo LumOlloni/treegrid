@@ -397,7 +397,7 @@ export default {
             let findCell = document.querySelectorAll(
               "#_gridcontrolEditForm > table > tbody > tr > td "
             )[findPosOfColum + 1];
-
+            findCell.firstChild.remove();
             findCell.style.pointerEvents = "none";
             findCell.style.background = "rgba(236, 240, 241, 0.5)";
           }
