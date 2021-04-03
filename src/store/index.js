@@ -46,7 +46,10 @@ const store = new Vuex.Store({
   actions: {
     async register({ commit }, { data, router }) {
       try {
-        const res = await axios.post("http://localhost:8090/register", data);
+        const res = await axios.post(
+          "http://31.220.57.126:8090/register",
+          data
+        );
 
         commit("SET_IS_SUCCESS_AUTH", true);
 
@@ -68,7 +71,7 @@ const store = new Vuex.Store({
     },
     async login({ commit }, { data, router }) {
       try {
-        const res = await axios.post("http://localhost:8090/login", data);
+        const res = await axios.post("http://31.220.57.126:8090/login", data);
         commit("SET_TOKEN", res.data);
         router.push({ path: "/treegrid" });
         return res.data;

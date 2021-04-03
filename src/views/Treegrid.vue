@@ -159,7 +159,7 @@ export default {
   },
   created() {
     this.loading = true;
-    this.socket = new SockJS("http://localhost:8090/productInfo-websocket");
+    this.socket = new SockJS("http://31.220.57.126:8090/productInfo-websocket");
     this.stompClient = Stomp.over(this.socket);
     this.stompClient.connect({}, (frame) => {
       const { command } = frame;
