@@ -151,7 +151,6 @@ export default {
       loading: true,
     };
   },
-
   mounted() {
     setTimeout(() => {
       this.hideSpinnerMethod();
@@ -159,7 +158,7 @@ export default {
   },
   created() {
     this.loading = true;
-    this.socket = new SockJS("http://31.220.57.126:8090/productInfo-websocket");
+    this.socket = new SockJS("http://localhost:8090/productInfo-websocket");
     this.stompClient = Stomp.over(this.socket);
     this.stompClient.connect({}, (frame) => {
       const { command } = frame;
@@ -300,6 +299,7 @@ export default {
             ];
 
             rowToUnBlock.style.background = "white";
+            rowToUnBlock.firstChild.remove();
 
             this.allUserBlockedCell.splice(findIndex, 1);
           }
@@ -318,10 +318,10 @@ export default {
   },
   methods: {
     rowDataBound(args) {
-      // args.row.getElementsByTagName("td")
       if (!this.groupAllRows.find((row) => row.idRow === args.data.id)) {
         this.groupAllRows.push({ idRow: args.data.id, row: args.row });
       }
+      this.hideSpinnerMethod();
     },
     lockUnLockCell(typeOfAction) {
       if (this.valueOfSelect === "-1" || this.valueOfSelect === "") return;
@@ -407,9 +407,12 @@ export default {
     actionComplete(args) {
       const { requestType } = args;
       if (requestType === "add") {
-        args.form.getElementsByTagName("input")[0].style.pointerEvents = "none";
-        args.form.getElementsByTagName("input")[0].style.background =
-          "rgba(236, 240, 241, 0.5)";
+        let idInput = document.querySelectorAll(
+          "#_gridcontrolEditForm > table > tbody > tr > td "
+        )[1];
+        idInput.firstChild.remove();
+        idInput.style.pointerEvents = "none";
+        idInput.style.background = "rgba(236, 240, 241, 0.5)";
       }
       this.updateCellFromDrag(this.isDragged);
       if (requestType === "beginEdit") {
@@ -423,6 +426,8 @@ export default {
       } else {
         this.blockCell = {};
       }
+
+      this.hideSpinnerMethod();
     },
     queryCellInfo(args) {
       let cells = args.data;
@@ -438,7 +443,12 @@ export default {
             args.column.field === lockCell.columName &&
             cells.id === lockCell.productInfo
           ) {
-            args.cell.style.background = "green";
+            let i = document.createElement("i");
+            i.classList.add("fa", "fa-lock");
+
+            i.style.color = "green";
+            args.cell.style.background = "rgba(236, 240, 241, 0.5)";
+            args.cell.appendChild(i);
           }
         }
       }
