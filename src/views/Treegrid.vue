@@ -158,7 +158,7 @@ export default {
   },
   created() {
     this.loading = true;
-    this.socket = new SockJS("http://localhost:8090/productInfo-websocket");
+    this.socket = new SockJS("http://31.220.57.126:8090/productInfo-websocket");
     this.stompClient = Stomp.over(this.socket);
     this.stompClient.connect({}, (frame) => {
       const { command } = frame;
@@ -405,7 +405,8 @@ export default {
       }
     },
     actionComplete(args) {
-      const { requestType } = args;
+      console.log("args", args);
+      const { requestType, name } = args;
       if (requestType === "add") {
         let idInput = document.querySelectorAll(
           "#_gridcontrolEditForm > table > tbody > tr > td "
@@ -414,7 +415,11 @@ export default {
         idInput.style.pointerEvents = "none";
         idInput.style.background = "rgba(236, 240, 241, 0.5)";
       }
-      this.updateCellFromDrag(this.isDragged);
+
+      if (name === "actionComplete") {
+        this.updateCellFromDrag(this.isDragged);
+      }
+
       if (requestType === "beginEdit") {
         const {
           rowData: { id },
@@ -485,10 +490,10 @@ export default {
         return;
       }
 
-      if (data[0].id === dropParent.parentID) {
-        this.hideSpinnerMethod();
-        return;
-      }
+      // if (data[0].id === dropParent.parentID) {
+      //   this.hideSpinnerMethod();
+      //   return;
+      // }
 
       if (data[0].id === findDropIndex.id) {
         this.hideSpinnerMethod();
