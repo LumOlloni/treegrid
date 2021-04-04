@@ -8,7 +8,7 @@
         :selectCellBlock="selectCellBlock"
         :blockObjectState="blockObjectState"
         :lockUnLockCell="lockUnLockCell"
-        :columns="columns"
+        :columns="columns.filter((column) => column !== '' && column !== 'id')"
       />
 
       <ejs-treegrid
@@ -107,8 +107,8 @@ export default {
   },
   data() {
     return {
-      // id , lhs , description , qty , total , unit , netwt , pricePer , source
       columns: [
+        "",
         "id",
         "lhs",
         "description",
@@ -152,9 +152,11 @@ export default {
     };
   },
   mounted() {
-    setTimeout(() => {
-      this.hideSpinnerMethod();
-    }, 1000);
+    if (this.gridData.result.length === 0) {
+      setTimeout(() => {
+        this.hideSpinnerMethod();
+      }, 10);
+    }
   },
   created() {
     this.loading = true;
@@ -202,10 +204,11 @@ export default {
           );
           this.gridData.result = socketData;
           this.gridData.count = socketData.length;
-          this.gridData.loading = false;
 
-          this.loading = false;
+          this.gridData = { ...this.gridData };
         });
+
+        this.loading = false;
 
         this.stompClient.subscribe("/table/lock", (data) => {
           let blocked = JSON.parse(data.body);
@@ -223,7 +226,7 @@ export default {
             if (findRow && findRow.row) {
               let findIndexOfColumn = this.columns.indexOf(blocked.columName);
               let rowToBlock = findRow.row.getElementsByTagName("td")[
-                findIndexOfColumn + 1
+                findIndexOfColumn
               ];
               let i = document.createElement("i");
               i.classList.add("fa", "fa-lock");
@@ -243,8 +246,9 @@ export default {
             if (findRow && findRow.row) {
               let findIndexOfColumn = this.columns.indexOf(blocked.columName);
               let rowToBlock = findRow.row.getElementsByTagName("td")[
-                findIndexOfColumn + 2
+                findIndexOfColumn + 1
               ];
+
               rowToBlock.style.background = "green";
             }
 
@@ -256,6 +260,7 @@ export default {
 
         this.stompClient.subscribe("/table/unlock", (data) => {
           let unblocked = JSON.parse(data.body);
+
           if (unblocked.treeUser !== this.user.userId) {
             let index = this.groupCell.findIndex(
               (cell) => cell.id === unblocked.columnLock
@@ -269,7 +274,7 @@ export default {
                 unblocked.columnName
               );
               let rowToUnBlock = findRow.row.getElementsByTagName("td")[
-                findIndexOfColumn + 1
+                findIndexOfColumn
               ];
               let lock = rowToUnBlock.getElementsByTagName("i");
 
@@ -299,7 +304,10 @@ export default {
             ];
 
             rowToUnBlock.style.background = "white";
-            rowToUnBlock.firstChild.remove();
+
+            if (rowToUnBlock.firstChild !== null) {
+              rowToUnBlock.firstChild.remove();
+            }
 
             this.allUserBlockedCell.splice(findIndex, 1);
           }
@@ -318,9 +326,8 @@ export default {
   },
   methods: {
     rowDataBound(args) {
-      if (!this.groupAllRows.find((row) => row.idRow === args.data.id)) {
-        this.groupAllRows.push({ idRow: args.data.id, row: args.row });
-      }
+      this.groupAllRows.push({ idRow: args.data.id, row: args.row });
+
       this.hideSpinnerMethod();
     },
     lockUnLockCell(typeOfAction) {
@@ -362,10 +369,10 @@ export default {
     },
 
     hideSpinnerMethod() {
-      let spinner = document.querySelector(".e-spinner-pane");
+      let spinner = document.querySelector(".e-spin-show");
+      console.log("spinner", spinner);
       if (spinner !== null) {
-        document.querySelector(".e-spinner-pane").remove();
-        this.$refs.treegrid.hideSpinner();
+        spinner.style.display = "none ";
       }
     },
     updateCellFromDrag(isDragged) {
@@ -396,7 +403,7 @@ export default {
           if (findPosOfColum > -1) {
             let findCell = document.querySelectorAll(
               "#_gridcontrolEditForm > table > tbody > tr > td "
-            )[findPosOfColum + 1];
+            )[findPosOfColum];
             findCell.firstChild.remove();
             findCell.style.pointerEvents = "none";
             findCell.style.background = "rgba(236, 240, 241, 0.5)";
@@ -405,21 +412,10 @@ export default {
       }
     },
     actionComplete(args) {
-      const { requestType, name } = args;
-      if (requestType === "add") {
-        let idInput = document.querySelectorAll(
-          "#_gridcontrolEditForm > table > tbody > tr > td "
-        )[1];
-        idInput.firstChild.remove();
-        idInput.style.pointerEvents = "none";
-        idInput.style.background = "rgba(236, 240, 241, 0.5)";
-      }
-
-      if (name === "actionComplete") {
-        this.updateCellFromDrag(this.isDragged);
-      }
+      const { requestType } = args;
 
       if (requestType === "beginEdit") {
+        this.updateCellFromDrag(this.isDragged);
         const {
           rowData: { id },
         } = args;
@@ -524,6 +520,9 @@ export default {
     dataSourceChanged: function(state) {
       if (state.action === "add") {
         let dataToSend = this.sendData(state);
+        if (dataToSend.id) {
+          delete dataToSend.id;
+        }
         this.stompClient.send("/data/save", {}, JSON.stringify(dataToSend));
         state.endEdit();
       } else if (state.action === "edit") {
