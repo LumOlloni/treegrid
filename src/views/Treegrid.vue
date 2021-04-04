@@ -379,7 +379,7 @@ export default {
         this.$refs.treegrid.ej2Instances.updateCell(
           this.dropObj.dropIndex,
           "order",
-          this.dropObj.dropIndex + 1
+          this.dropObj.dropIndex - 1
         );
       }
     },
@@ -405,7 +405,6 @@ export default {
       }
     },
     actionComplete(args) {
-      console.log("args", args);
       const { requestType, name } = args;
       if (requestType === "add") {
         let idInput = document.querySelectorAll(
@@ -490,10 +489,10 @@ export default {
         return;
       }
 
-      // if (data[0].id === dropParent.parentID) {
-      //   this.hideSpinnerMethod();
-      //   return;
-      // }
+      if (data[0].id === dropParent.parentID) {
+        this.hideSpinnerMethod();
+        return;
+      }
 
       if (data[0].id === findDropIndex.id) {
         this.hideSpinnerMethod();
