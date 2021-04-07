@@ -1,8 +1,12 @@
 <template>
   <div class="wrapper-treegrid">
     <h1 v-if="loading">Loading</h1>
+
     <!--   -->
     <template v-else>
+      <div class="container">
+        <button class="btn btn-danger" @click="logout">Logout</button>
+      </div>
       <SelectBox
         :selectUnBlockCell="selectUnBlockCell"
         :selectCellBlock="selectCellBlock"
@@ -106,6 +110,7 @@ export default {
   components: {
     SelectBox,
   },
+
   data() {
     return {
       columns: [
@@ -330,6 +335,10 @@ export default {
     },
   },
   methods: {
+    logout() {
+      localStorage.clear();
+      this.$router.push({ name: "Login" });
+    },
     rowDataBound(args) {
       console.log("args", args);
       let index = this.groupAllRows.findIndex(
