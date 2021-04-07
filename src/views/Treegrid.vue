@@ -212,6 +212,7 @@ export default {
 
         this.stompClient.subscribe("/table/lock", (data) => {
           let blocked = JSON.parse(data.body);
+          console.log("blocked", blocked);
           if (blocked.treeUser !== this.user.userId) {
             let findIndex = this.groupCell.findIndex(
               (cell) => cell.id === blocked.id
@@ -245,9 +246,12 @@ export default {
 
             if (findRow && findRow.row) {
               let findIndexOfColumn = this.columns.indexOf(blocked.columName);
+
               let rowToBlock = findRow.row.getElementsByTagName("td")[
                 findIndexOfColumn + 1
               ];
+
+              console.log("rowToBlock", rowToBlock);
 
               rowToBlock.style.background = "green";
             }
@@ -326,9 +330,12 @@ export default {
   },
   methods: {
     rowDataBound(args) {
-      this.groupAllRows.push({ idRow: args.data.id, row: args.row });
-
-      this.hideSpinnerMethod();
+      let index = this.groupAllRows.findIndex(
+        (group) => group.idRow === args.data.id
+      );
+      if (index === -1) {
+        this.groupAllRows.push({ idRow: args.data.id, row: args.row });
+      }
     },
     lockUnLockCell(typeOfAction) {
       if (this.valueOfSelect === "-1" || this.valueOfSelect === "") return;
