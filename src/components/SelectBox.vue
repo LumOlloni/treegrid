@@ -1,6 +1,6 @@
 <template>
   <div class="row" :class="{ blockObjectState: !blockObjectState }">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <select
         @input="selectCellBlock"
         class="form-select"
@@ -19,7 +19,15 @@
       </button>
     </div>
 
-    <div class="col-md-6 flex-class">
+    <div class="col-md-4">
+      <div class="center-btn">
+        <button @click="makeParent" class="btn btn-primary">
+          Button
+        </button>
+      </div>
+    </div>
+
+    <div class="col-md-4 flex-class">
       <select
         @input="selectUnBlockCell"
         class="form-select"
@@ -44,6 +52,10 @@
 export default {
   name: "SelectBox",
   props: {
+    makeParent: {
+      type: Function,
+      required: true,
+    },
     lockUnLockCell: {
       type: Function,
       required: true,
@@ -73,5 +85,12 @@ export default {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.center-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 </style>

@@ -7,6 +7,7 @@
         :selectUnBlockCell="selectUnBlockCell"
         :selectCellBlock="selectCellBlock"
         :blockObjectState="blockObjectState"
+        :makeParent="makeParent"
         :lockUnLockCell="lockUnLockCell"
         :columns="columns.filter((column) => column !== '' && column !== 'id')"
       />
@@ -330,12 +331,30 @@ export default {
   },
   methods: {
     rowDataBound(args) {
+      console.log("args", args);
       let index = this.groupAllRows.findIndex(
         (group) => group.idRow === args.data.id
       );
       if (index === -1) {
-        this.groupAllRows.push({ idRow: args.data.id, row: args.row });
+        this.groupAllRows.push({
+          idRow: args.data.id,
+          dataOfRow: args.data,
+          row: args.row,
+        });
       }
+    },
+
+    makeParent() {
+      const { id } = this.blockCell;
+      let dataToSend = this.groupAllRows.find((group) => group.idRow === id);
+
+      const { dataOfRow } = dataToSend;
+
+      dataOfRow.parentID = null;
+
+      this.stompClient.send("/data/save", {}, JSON.stringify(dataOfRow));
+
+      this.blockCell = {};
     },
     lockUnLockCell(typeOfAction) {
       if (this.valueOfSelect === "-1" || this.valueOfSelect === "") return;
@@ -377,7 +396,6 @@ export default {
 
     hideSpinnerMethod() {
       let spinner = document.querySelector(".e-spin-show");
-      console.log("spinner", spinner);
       if (spinner !== null) {
         spinner.style.display = "none ";
       }
